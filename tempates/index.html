@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Proyecto</title>
+    <script type="text/javascript" src="//code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.3/socket.io.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function () {
+            var socket = io.connect();
+
+            socket.on('connect', function () {
+                socket.emit('my_event', { data: 'Te has conectado' });
+            });
+            socket.on('disconnect', function () {
+                $('#log').append('<br>Disconnected');
+            });
+            socket.on('my_response', function (msg) {
+                $('#log').append('<br>' + msg.data);
+            });
+            socket.on('light', function (data) { //get button status from client
+                document.getElementById("light").checked = data; //change checkbox according to push button on Raspberry Pi
+                socket.emit("light", data); //send push button status to back to server
+            });
+
+            // event handler for server sent data
+            // the data is displayed in the "Received" section of the page
+            // handlers for the different forms in the page
+            // these send data to the server in a variety of ways
+            $('form#emit').submit(function (event) {
+                socket.emit('my_event', { data: $('#emit_data').val() });
+
+                return false;
+            });
+            $('form#broadcast').submit(function (event) {
+                socket.emit('my_broadcast_event', { data: $('#broadcast_data').val() });
+                // socket.emit('light', Number(this.checked));
+                return false;
+            });
+            
+
+        });
+
+       
+        document.getElementById('light').addEventListener("change", function () { //add event listener for when checkbox changes
+            socket.emit('light', Number(this.checked)); //send button status to server (as 1 or 0)
+        });
+
+    </script>
+    <style>
+        body {
+            background-image: url('https://img.freepik.com/foto-gratis/casa-aislada-campo_1303-23773.jpg?w=996&t=st=1674588074~exp=1674588674~hmac=b582167dae531eaeeb3e5fcf62e2b20bbfd323db77ed711381b3201d20c95043.jpg');
+            text-align: justify;
+        }
+
+        .shadowbox {
+            display: inline-flex;
+
+        }
+
+        .cuadro {
+            margin-right: 10%;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <div>
+            <h1>Proyecto</h1>
+            <h2>En los siguinetes formulario se puede colocar el objeto a encender u/o apagar:
+                foco1,
+                foco2,
+                IA
+            </h2>
+        </div>
+        <div class="shadowbox">
+            <div class="cuadro">
+                <form id="emit" method="POST" action='#'>
+                    <input type="text" name="emit_data" id="emit_data" placeholder="Objeto a encender">
+                    <input type="submit" value="Encender">
+
+                </form>
+            </div>
+
+            <div class="cuadro">
+                <form id="broadcast" method="POST" action='#'>
+                    <input type="text" name="broadcast_data" id="broadcast_data" placeholder="Dispositivo a apagar">
+                    <input type="submit" value="Apagar">
+                    <input type="checkbox" id="light">
+                    
+                </form>
+            </div>
+
+
+        </div>
+
+
+    </div>
+    <img src="https://kywitiendaenlinea.com/wp-content/uploads/2020/10/642477.jpg" width="100" height="200">
+    <h2>Datos recibidos </h2>
+    <div>
+        <p id="log"></p>
+    </div>
+</body>
+
+</html>
